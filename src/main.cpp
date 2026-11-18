@@ -23,6 +23,11 @@ static const PidSettings INITIAL_PID = {0.4f, 0.1f, 0.25f, 0.03f, 0.0f, 0.0f};
 static const float SETPOINT_LIMIT_CM = 30.0f;
 static const Vec2 SETPOINT_DEFAULT = {0.0, 0.0}; // x and y setpoints in cm
 
+// Convert IK output (Vec3) to the format ServoLink::send expects
+static std::array<float, NUM_SERVOS> toServoCmd(const Vec3& a) {
+    return {static_cast<float>(a[0]), static_cast<float>(a[1]), static_cast<float>(a[2])};
+}
+
 int main() {
     using Clock = std::chrono::steady_clock;
 
@@ -51,9 +56,11 @@ int main() {
     Clock::time_point pastBallTime; // Time of the last frame
 
     // Levelling the platform
+    // CHECK: zero control effort is assumed to mean "level". Confirm in ik.cpp
+    // that calculateMotorAngles handles a zero vector (no divide-by-zero when normalizing).
     auto holdLevel = [&]() {
         if (!levelSent) {
-            servos.send(inverseKinematics(0.0f, 0.0f));
+            servos.send(toServoCmd(calculateMotorAngles(Vec3{0.0, 0.0, 0.0})));
             levelSent = true;
         }
     };
@@ -64,10 +71,10 @@ int main() {
     while (true) {
         // 0. Update past frame time
         pastBallTime = ball.time;
-        
+
         // 1. Declare Ball Position struct
         bool visible = tracker.update(ball);
-        double dt = ball.time - pastBallTime;
+        double dt = std::chrono::duration<double>(ball.time - pastBallTime).count(); // seconds
 
         // 2. Update PID UI Tuning
         ui.setCanRun(tracker.calibrated());
@@ -76,12 +83,13 @@ int main() {
         bool ranPid = false;
         if (visible) {
             // 3. Apply PID Controller
-            Vec2 uVec; 
-            uVec[0] = pidX.calculateControlEffort(SETPOINT_DEFAULT[0], BallReading.x_cm, dt);
-            uVec[1] = pidY.calculateControlEffort(SETPOINT_DEFAULT[1], BallReading.y_cm, dt);
+            double tiltX = pidX.calculateControlEffort(SETPOINT_DEFAULT[0], ball.x_cm, dt);
+            double tiltY = pidY.calculateControlEffort(SETPOINT_DEFAULT[1], ball.y_cm, dt);
+            Vec3 uVec{tiltX, tiltY, 0.0};
 
-            // 4. Calculate (Actuating) Absolute Motor Angles
+            // 4. Calculate (Actuating) Absolute Motor Angles and send them
             Vec3 motorAngles = calculateMotorAngles(uVec);
+            servos.send(toServoCmd(motorAngles));
             levelSent = false;
             ranPid = true;
 

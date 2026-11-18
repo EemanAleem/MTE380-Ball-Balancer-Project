@@ -5,13 +5,13 @@
 
 class PID {
     public:
-        PID(float kp, float ki, float kd, float tau);
-        float update(float setpoint, float measured, float dt);
+        PID(double kp, double ki, double kd, double tau);
+        double calculateControlEffort(double setpoint, double measured, double dt);
 
     private:
-        float kp, ki, kd;
-        float integral, derivative;
-        float tau;
-        float previous_measured;
+        double kp, ki, kd;
+        double integral, derivative;
+        double tau;
+        double previous_measured;
         bool first_run;
 };

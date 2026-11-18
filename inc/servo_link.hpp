@@ -6,6 +6,8 @@
 #include "ik.hpp"
 #include "serial_port.hpp"
 
+constexpr int NUM_SERVOS = 3;
+
 class ServoLink {
 public:
 
