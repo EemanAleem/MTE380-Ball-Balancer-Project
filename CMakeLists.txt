@@ -12,6 +12,7 @@ add_executable(ball_balancer
     pid.cpp
     pid_ui.cpp
     ik.cpp
+    math.cpp
     servo_link.cpp
     serial_port.cpp
     text_render.cpp
