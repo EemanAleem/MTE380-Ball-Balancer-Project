@@ -12,6 +12,17 @@ PID::PID(double kp, double ki, double kd, double tau)
       integral(0.0), derivative(0.0),
       previous_measured(0.0), first_run(true) {}
 
+void PID::setGains(double kp, double ki, double kd) {
+    this->kp = kp;
+    this->ki = ki;
+    this->kd = kd;
+}
+
+void PID::clearIntegralAndDerivative() {
+    integral = 0.0;
+    derivative = 0.0;
+}
+
 double PID::calculateControlEffort(double setpoint, double measured, double dt) {
     // 0. Ensure dt is positive to avoid division by zero
     if (dt <= 0.0) dt = 1e-3;
