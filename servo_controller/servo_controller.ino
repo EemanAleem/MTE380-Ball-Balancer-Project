@@ -2,24 +2,6 @@
   Servo angle control for the Adafruit 16-channel PWM & Servo driver
   (PCA9685). Type an angle in the Serial Monitor and the servo moves
   to that angle.
-
-  Based on the Adafruit servo example:
-  This is an example for our Adafruit 16-channel PWM & Servo driver
-  Servo test - this will drive 8 servos, one after the other on the
-  first 8 pins of the PCA9685
-
-  Pick one up today in the adafruit shop!
-  ------> http://www.adafruit.com/products/815
-
-  These drivers use I2C to communicate, 2 pins are required to
-  interface.
-
-  Adafruit invests time and resources providing this open source code,
-  please support Adafruit and open-source hardware by purchasing
-  products from Adafruit!
-
-  Written by Limor Fried/Ladyada for Adafruit Industries.
-  BSD license, all text above must be included in any redistribution
  ****************************************************/
 
 #include <Wire.h>
@@ -43,7 +25,7 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 #define PULSE_HARD_MAX 1000
 
 #define SAFETY_LIMIT_MIN 0
-#define SAFETY_LIMIT_MAX 60
+#define SAFETY_LIMIT_MAX 50
 
 // Per-channel trim in degrees (positive = shifts motor toward higher pulse).
 // All channels share the same SERVOMIN/SERVOMAX.
@@ -71,7 +53,7 @@ void setServoAngle(uint8_t channel, float angle) {
 }
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   Serial.println("PCA9685 servo angle control");
   Serial.println("Enter an angle (e.g. 90) to move channel 3,");
   Serial.println("or 'channel angle' (e.g. 5 45) to move another channel.");
@@ -110,6 +92,8 @@ void loop() {
       Serial.println(SAFETY_LIMIT_MAX);
       return;
     }
-    setServoAngle(channel, angle);
+    else {
+      setServoAngle(channel, angle);
+    }
   }
 }
