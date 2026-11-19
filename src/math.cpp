@@ -1,6 +1,6 @@
 #include "math.hpp"
 
- Vec3 cross(const Vec3& a, const Vec3& b) {
+Vec3 cross(const Vec3& a, const Vec3& b) {
     return {a[1] * b[2] - a[2] * b[1],
             a[2] * b[0] - a[0] * b[2],
             a[0] * b[1] - a[1] * b[0]};
@@ -12,6 +12,10 @@ double dot(const Vec3& a, const Vec3& b) {
 
 double norm(const Vec3& a) {
     return sqrt(dot(a, a));
+}
+
+double safeAcos(double theta) {
+    return std::clamp(acos(theta), -1.0, 1.0);
 }
 
 Vec3 scale(const Vec3& a, double s) {
