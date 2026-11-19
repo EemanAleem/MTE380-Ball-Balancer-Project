@@ -7,14 +7,14 @@ static constexpr double L2 = 11;            // length of second link
 static constexpr double R_L = 14.5;         // distance from center of plate to center of end effector joint
 
 /* Vectors from center of plate to center of end effector joint for legs A, B & C. */
-static constexpr Vec3 PA_D = {0.0, R_L, 0.0};
-static constexpr Vec3 PB_D = {R_L * cos(210*DEG_TO_RAD), R_L * sin(210*DEG_TO_RAD), 0.0};
-static constexpr Vec3 PC_D = {R_L * cos(330*DEG_TO_RAD), R_L * sin(330*DEG_TO_RAD), 0.0};
+static Vec3 PA_D = {0.0, R_L, 0.0};
+static Vec3 PB_D = {R_L * cos(210*DEG_TO_RAD), R_L * sin(210*DEG_TO_RAD), 0.0};
+static Vec3 PC_D = {R_L * cos(330*DEG_TO_RAD), R_L * sin(330*DEG_TO_RAD), 0.0};
 
 /* Vectors from center of base to center of motors A, B & C. */
-static constexpr Vec3 BASE_A = {0.0, 6.0, 0.0};
-static constexpr Vec3 BASE_B = {5.5*cos(210*DEG_TO_RAD), 5.5*sin(210*DEG_TO_RAD), 0.0};
-static constexpr Vec3 BASE_C = {6.7*cos(330*DEG_TO_RAD), 6.7*sin(330*DEG_TO_RAD), 0.0};
+static Vec3 BASE_A = {0.0, 6.0, 0.0};
+static Vec3 BASE_B = {5.5*cos(210*DEG_TO_RAD), 5.5*sin(210*DEG_TO_RAD), 0.0};
+static Vec3 BASE_C = {6.7*cos(330*DEG_TO_RAD), 6.7*sin(330*DEG_TO_RAD), 0.0};
 
 /* Flips Axes Rotation Signs depending on Camera View */
 static constexpr double SIGN_X = 1.0;  // Flip X axis rotation sign
