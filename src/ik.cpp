@@ -1,31 +1,42 @@
 #include "ik.hpp"
 
 /* All Measurements [cm unless otherwise specified] */
-constexpr Vec3 T = {0.0, 0.0, 11.0}; // z height from motor shaft to plate
-constexpr double L1 = 8;             // length of first link
-constexpr double L2 = 11;            // length of second link
-constexpr double R_L = 14.5;         // distance from center of plate to center of end effector joint
+static constexpr Vec3 T = {0.0, 0.0, 13.0}; // z height from motor shaft to plate
+static constexpr double L1 = 8;             // length of first link
+static constexpr double L2 = 11;            // length of second link
+static constexpr double R_L = 14.5;         // distance from center of plate to center of end effector joint
 
 /* Vectors from center of plate to center of end effector joint for legs A, B & C. */
-Vec3 PA_D = {0.0, R_L, 0.0};
-Vec3 PB_D = {R_L * cos(210*DEG_TO_RAD), R_L * sin(210*DEG_TO_RAD), 0.0};
-Vec3 PC_D = {R_L * cos(330*DEG_TO_RAD), R_L * sin(330*DEG_TO_RAD), 0.0};
+static constexpr Vec3 PA_D = {0.0, R_L, 0.0};
+static constexpr Vec3 PB_D = {R_L * cos(210*DEG_TO_RAD), R_L * sin(210*DEG_TO_RAD), 0.0};
+static constexpr Vec3 PC_D = {R_L * cos(330*DEG_TO_RAD), R_L * sin(330*DEG_TO_RAD), 0.0};
 
 /* Vectors from center of base to center of motors A, B & C. */
-Vec3 BASE_A = {0.0, 6.0, 0.0};
-Vec3 BASE_B = {5.5*cos(210*DEG_TO_RAD), 5.5*sin(210*DEG_TO_RAD), 0.0};
-Vec3 BASE_C = {6.7*cos(330*DEG_TO_RAD), 6.7*sin(330*DEG_TO_RAD), 0.0};
+static constexpr Vec3 BASE_A = {0.0, 6.0, 0.0};
+static constexpr Vec3 BASE_B = {5.5*cos(210*DEG_TO_RAD), 5.5*sin(210*DEG_TO_RAD), 0.0};
+static constexpr Vec3 BASE_C = {6.7*cos(330*DEG_TO_RAD), 6.7*sin(330*DEG_TO_RAD), 0.0};
+
+/* Flips Axes Rotation Signs depending on Camera View */
+static constexpr double SIGN_X = 1.0;  // Flip X axis rotation sign
+static constexpr double SIGN_Y = -1.0; // Flip Y axis rotation sign
+
+/* Angle Limits */
+static constexpr double MIN_MOTOR_ANGLE = 0.0;  // Minimum angle for the legs
+static constexpr double MAX_MOTOR_ANGLE = 50.0; // Maximum angle for the legs
+static constexpr double MAX_TILT_ANGLE = 10.0; // Maximum tilt angle for the plate
 
 Vec3 calculateNormalFromDirVec(const Vec3 &uVec) {
-    // 1. Avoid dividing by a zero norm (NaNs) and skip the work when there is no movement
-    const double mag = std::hypot(uVec[0], uVec[1]);
-    if (mag == 0.0) {
-        return UNIT_K;
-    }
-    const Vec3 dirVec = {uVec[0]/mag, uVec[1]/mag, 0.0};
-    if (dirVec[0] == 0.0 && dirVec[1] == 0.0) {
-        return UNIT_K;
-    }
+    // 1.0 Guards against control signal vector, uVec
+    if (uVec[0] == 0.0 && uVec[1] == 0.0) return UNIT_K;
+
+    // 1.1 Calculate magnitude of direction vector, if 0, plate should point straight up (UNIT_K)
+    double mag = std::hypot(uVec[0], uVec[1]);
+    mag *= DEG_TO_RAD; // Convert to radians
+    if (mag == 0.0) return UNIT_K;
+    if (mag > MAX_TILT_ANGLE) mag = MAX_TILT_ANGLE * DEG_TO_RAD;
+
+    // 1.2 Calculate the direction vector in the x-y plane, scaled to unit length
+    const Vec3 dirVec = {SIGN_X * uVec[0]/mag,  SIGN_Y * uVec[1]/mag, 0.0};
 
     // 2. Axis of rotation: orthogonal to dirVec, in the x-y plane
     const Vec3 rotAxis = {-dirVec[1], dirVec[0], 0.0};
@@ -75,19 +86,24 @@ Vec3 calculateMotorAngles(const Vec3 &uVec) {
     double lc_mag = std::hypot(lc[0], lc[1], lc[2]);
 
     // 5. Calculate the alpha angles for Legs A, B & C.
-    double alpha_a = acos( (la_mag*la_mag + L1*L1 - L2*L2)/(2.0*la_mag*L1) );
-    double alpha_b = acos( (lb_mag*lb_mag + L1*L1 - L2*L2)/(2.0*lb_mag*L1) );
-    double alpha_c = acos( (lc_mag*lc_mag + L1*L1 - L2*L2)/(2.0*lc_mag*L1) );
+    double alpha_a = safeAcos( (la_mag*la_mag + L1*L1 - L2*L2)/(2.0*la_mag*L1) );
+    double alpha_b = safeAcos( (lb_mag*lb_mag + L1*L1 - L2*L2)/(2.0*lb_mag*L1) );
+    double alpha_c = safeAcos( (lc_mag*lc_mag + L1*L1 - L2*L2)/(2.0*lc_mag*L1) );
 
     // 6. Calculate the beta angles for Legs A, B & C.
-    double beta_a = acos(dot(UNIT_K, la)/la_mag);
-    double beta_b = acos(dot(UNIT_K, lb)/lb_mag);
-    double beta_c = acos(dot(UNIT_K, lc)/lc_mag);
+    double beta_a = safeAcos(dot(UNIT_K, la)/la_mag);
+    double beta_b = safeAcos(dot(UNIT_K, lb)/lb_mag);
+    double beta_c = safeAcos(dot(UNIT_K, lc)/lc_mag);
 
     // 7. Calculate the final motor angles for Legs A, B & C.
     double gamma_a = (PI/2 - alpha_a - beta_a) * RAD_TO_DEG;
     double gamma_b = (PI/2 - alpha_b - beta_b) * RAD_TO_DEG;
     double gamma_c = (PI/2 - alpha_c - beta_c) * RAD_TO_DEG;
+
+    // 8. Clamp gamma angles to the range [MIN_MOTOR_ANGLE and MAX_MOTOR_ANGLE] to prevent overextension of the legs.
+    gamma_a = std::clamp(gamma_a, MIN_MOTOR_ANGLE, MAX_MOTOR_ANGLE);
+    gamma_b = std::clamp(gamma_b, MIN_MOTOR_ANGLE, MAX_MOTOR_ANGLE);
+    gamma_c = std::clamp(gamma_c, MIN_MOTOR_ANGLE, MAX_MOTOR_ANGLE);
 
     return {gamma_a, gamma_b, gamma_c};
 }

@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cmath>
+#include <algorithm>
 
 using std::sqrt;
 using std::sin;
@@ -22,6 +23,7 @@ constexpr double PI = 3.14159265358979323846;
 constexpr double RAD_TO_DEG = 180.0 / PI;
 constexpr double DEG_TO_RAD = PI / 180.0;
 
+double safeAcos(double x);
 Vec3 cross(const Vec3& a, const Vec3& b);
 double dot(const Vec3& a, const Vec3& b);
 double norm(const Vec3& a);
