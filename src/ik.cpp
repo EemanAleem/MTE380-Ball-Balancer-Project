@@ -1,7 +1,7 @@
 #include "ik.hpp"
 
 /* All Measurements [cm unless otherwise specified] */
-static constexpr Vec3 T = {0.0, 0.0, 13.0}; // z height from motor shaft to plate
+static constexpr Vec3 T = {0.0, 0.0, 11.0}; // z height from motor shaft to plate
 static constexpr double L1 = 8;             // length of first link
 static constexpr double L2 = 11;            // length of second link
 static constexpr double R_L = 14.5;         // distance from center of plate to center of end effector joint
@@ -17,8 +17,8 @@ static Vec3 BASE_B = {5.5*cos(210*DEG_TO_RAD), 5.5*sin(210*DEG_TO_RAD), 0.0};
 static Vec3 BASE_C = {6.7*cos(330*DEG_TO_RAD), 6.7*sin(330*DEG_TO_RAD), 0.0};
 
 /* Flips Axes Rotation Signs depending on Camera View */
-static constexpr double SIGN_X = 1.0;  // Flip X axis rotation sign
-static constexpr double SIGN_Y = -1.0; // Flip Y axis rotation sign
+static constexpr double SIGN_X = 1.0;  // Flip X axis rotation sign. Default =  1.0.
+static constexpr double SIGN_Y = -1.0; // Flip Y axis rotation sign  Default = -1.0.
 
 /* Angle Limits */
 static constexpr double MIN_MOTOR_ANGLE = 0.0;  // Minimum angle for the legs
@@ -36,10 +36,10 @@ Vec3 calculateNormalFromDirVec(const Vec3 &uVec) {
     if (mag > MAX_TILT_ANGLE) mag = MAX_TILT_ANGLE * DEG_TO_RAD;
 
     // 1.2 Calculate the direction vector in the x-y plane, scaled to unit length
-    const Vec3 dirVec = {SIGN_X * uVec[0]/mag,  SIGN_Y * uVec[1]/mag, 0.0};
+    const Vec3 dirVec = {uVec[0]/mag, uVec[1]/mag, 0.0};
 
     // 2. Axis of rotation: orthogonal to dirVec, in the x-y plane
-    const Vec3 rotAxis = {-dirVec[1], dirVec[0], 0.0};
+    const Vec3 rotAxis = { (SIGN_Y*dirVec[1]), (SIGN_X*dirVec[0]), 0.0 };
     const Vec3 rotAxisNorm = scale(rotAxis, 1.0 / std::hypot(rotAxis[0], rotAxis[1]));
 
     // 3. Extend the direction vector to 3D
@@ -100,7 +100,8 @@ Vec3 calculateMotorAngles(const Vec3 &uVec) {
     double gamma_b = (PI/2 - alpha_b - beta_b) * RAD_TO_DEG;
     double gamma_c = (PI/2 - alpha_c - beta_c) * RAD_TO_DEG;
 
-    // 8. Clamp gamma angles to the range [MIN_MOTOR_ANGLE and MAX_MOTOR_ANGLE] to prevent overextension of the legs.
+    // 8. Clamp gamma angles to the range [MIN_MOTOR_ANGLE and MAX_MOTOR_ANGLE] 
+    //    to prevent overextension of the legs.
     gamma_a = std::clamp(gamma_a, MIN_MOTOR_ANGLE, MAX_MOTOR_ANGLE);
     gamma_b = std::clamp(gamma_b, MIN_MOTOR_ANGLE, MAX_MOTOR_ANGLE);
     gamma_c = std::clamp(gamma_c, MIN_MOTOR_ANGLE, MAX_MOTOR_ANGLE);
