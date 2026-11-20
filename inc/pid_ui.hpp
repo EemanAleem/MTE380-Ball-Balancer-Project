@@ -24,7 +24,7 @@ public:
     bool takeRestart();
 
     void setCanRun(bool canRun);
-    void log(Clock::time_point t, float x, float y, float tiltX, float tiltY, bool controlling);
+    void log(Clock::time_point t, float x, float y, float tiltX, float tiltY);
 
     void draw();
     bool handleKey(int key);

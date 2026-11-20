@@ -89,9 +89,9 @@ void PidUi::setCanRun(bool canRun) {
     }
 }
 
-void PidUi::log(Clock::time_point t, float x, float y, float tiltX, float tiltY, bool controlling) {
+void PidUi::log(Clock::time_point t, float x, float y, float tiltX, float tiltY) {
     double ts = std::chrono::duration<double>(t - start_).count();
-    log_.push_back({ts, x, y, active_.setX, active_.setY, tiltX, tiltY, controlling});
+    log_.push_back({ts, x, y, active_.setX, active_.setY, tiltX, tiltY});
 }
 
 bool PidUi::hasPending() const {
