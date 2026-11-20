@@ -14,7 +14,7 @@
 static const int CAMERA_INDEX = 0;
 
 static const char* SERIAL_PORT = "COM3";
-static const int SERIAL_BAUD = 9600;
+static const int SERIAL_BAUD = 115200;
 static const bool ECHO_ARDUINO = true;
 
 static const std::array<int, NUM_SERVOS> SERVO_CHANNELS = {3, 5, 7};
