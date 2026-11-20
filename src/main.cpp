@@ -20,7 +20,7 @@ static const bool ECHO_ARDUINO = true; // If you want msgs from Arduino to be pr
 // Constants
 static const int SERIAL_BAUD = 115200;
 static const std::array<int, NUM_SERVOS> SERVO_CHANNELS = {3, 5, 7};
-static const PidSettings INITIAL_PID = {0.08f, 0.0f, 0.0f, 0.03f, 0.0f, 0.0f};
+static const PidSettings INITIAL_PID = {0.2f, 0.0f, 0.0f, 0.03f, 0.0f, 0.0f};
 static const float SETPOINT_LIMIT_CM = 30.0f;
 static const Vec2 SETPOINT_DEFAULT = {0.0, 0.0}; // x and y setpoints in cm
 

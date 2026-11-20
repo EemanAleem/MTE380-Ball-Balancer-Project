@@ -17,8 +17,8 @@ static Vec3 BASE_B = {5.5*cos(210*DEG_TO_RAD), 5.5*sin(210*DEG_TO_RAD), 0.0};
 static Vec3 BASE_C = {6.7*cos(330*DEG_TO_RAD), 6.7*sin(330*DEG_TO_RAD), 0.0};
 
 /* Flips Axes Rotation Signs depending on Camera View */
-static constexpr double SIGN_X = 1.0;  // Flip X axis rotation sign
-static constexpr double SIGN_Y = -1.0; // Flip Y axis rotation sign
+static constexpr double SIGN_X = -1.0;  // Flip X axis rotation sign
+static constexpr double SIGN_Y = 1.0; // Flip Y axis rotation sign
 
 /* Angle Limits */
 static constexpr double MIN_MOTOR_ANGLE = 0.0;  // Minimum angle for the legs
