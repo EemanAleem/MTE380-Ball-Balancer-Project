@@ -1,7 +1,7 @@
 #include "ik.hpp"
 
 /* All Measurements [cm unless otherwise specified] */
-static constexpr Vec3 T = {0.0, 0.0, 13.0}; // z height from motor shaft to plate
+static constexpr Vec3 T = {0.0, 0.0, 11.0}; // z height from motor shaft to plate
 static constexpr double L1 = 8;             // length of first link
 static constexpr double L2 = 11;            // length of second link
 static constexpr double R_L = 14.5;         // distance from center of plate to center of end effector joint

@@ -13,8 +13,6 @@ static const double PLATFORM_CM = 30.0;
 static const int MIN_SATURATION = 60;
 static const int DISPLAY_W = 640;
 
-static const char* NAMES[4] = {"LEFT (-X)", "RIGHT (+X)", "TOP (+Y)", "BOTTOM (-Y)"};
-
 enum class Step { Colour, Axes };
 
 struct Axes {
@@ -64,7 +62,7 @@ static void setColour() {
 }
 
 static void onClick(int event, int x, int y, int, void*) {
-    // colour step: sample a 7x7 patch; axes step: store the click
+    // colour step: sample a 7x7 patch
     if (event != cv::EVENT_LBUTTONDOWN || frame.empty()) return;
     if (step == Step::Colour) {
         cv::Mat hsv;
@@ -77,24 +75,18 @@ static void onClick(int event, int x, int y, int, void*) {
                 samples.emplace_back(p[0], p[1], p[2]);
             }
         if (!samples.empty()) setColour();
-    } else if (clicks.size() < 4) {
-        clicks.emplace_back(x, y);
     }
 }
 
 static Axes makeAxes() {
-    // centre, pixel->cm matrix and platform radius from the 4 clicks
-    const cv::Point2d &left = clicks[0], &right = clicks[1], &top = clicks[2], &bottom = clicks[3];
+    const cv::Point2d &top = clicks[0], &bottom = clicks[1];
     Axes a;
-    a.centre = (left + right + top + bottom) * 0.25;
-    cv::Point2d ex = (right - left) / PLATFORM_CM;   // column 1: pixels per cm along +X
-    cv::Point2d ey = (top - bottom) / PLATFORM_CM;   // column 2: pixels per cm along +Y
-    cv::Matx22d m(ex.x, ey.x,
-                  ex.y, ey.y);
-    a.toCm = m.inv();
-    double sum = 0;
-    for (const auto& p : clicks) sum += cv::norm(p - a.centre);
-    a.radius = sum / clicks.size();
+    a.centre = (top + bottom) * 0.5;
+    cv::Point2d ey = (top - bottom) / PLATFORM_CM;   // pixels per cm along +Y
+    cv::Point2d ex(-ey.y, ey.x);                     // ey rotated 90deg -> +X (to the right when +Y is up)
+    a.toCm = cv::Matx22d(ex.x, ey.x,
+                         ex.y, ey.y).inv();
+    a.radius = cv::norm(top - bottom) / 2;
     return a;
 }
 
@@ -170,38 +162,30 @@ bool BallTracker::update(BallReading& out) {
         if (haveColour && findBall(frame, cv::Mat(), ball, mask))
             cv::circle(img, cv::Point((int)ball[0], (int)ball[1]), (int)ball[2], cv::Scalar(0, 255, 0), 2);
     } else {
-        for (size_t i = 0; i < clicks.size(); i++) {
-            cv::Point p = toPt(clicks[i]);
-            cv::circle(img, p, 5, cv::Scalar(255, 0, 255), -1);
-            cv::putText(img, NAMES[i], p + cv::Point(6, 6), cv::FONT_HERSHEY_SIMPLEX, 0.5,
-                        cv::Scalar(255, 0, 255), 1);
+        if (!haveAxes) {
+            axes = makeAxes();
+            haveAxes = true;
         }
-        if (clicks.size() < 4) {
-            text(img, std::string("STEP 2: click ") + NAMES[clicks.size()]);
-        } else {
-            if (!haveAxes) {
-                axes = makeAxes();
-                haveAxes = true;
-            }
-            cv::Point c = toPt(axes.centre);
-            cv::line(img, toPt(clicks[0]), toPt(clicks[1]), cv::Scalar(0, 0, 255), 1);
-            cv::line(img, toPt(clicks[3]), toPt(clicks[2]), cv::Scalar(0, 200, 0), 1);
-            cv::circle(img, c, (int)axes.radius, cv::Scalar(200, 200, 200), 1);
+        cv::Point c = toPt(axes.centre);
+        cv::Point2d ey = (clicks[0] - clicks[1]) * 0.5;
+        cv::Point2d ex(ey.y, -ey.x);
+        cv::line(img, toPt(axes.centre - ex), toPt(axes.centre + ex), cv::Scalar(0, 0, 255), 1);
+        cv::line(img, toPt(clicks[1]), toPt(clicks[0]), cv::Scalar(0, 200, 0), 1);
+        cv::circle(img, c, (int)axes.radius, cv::Scalar(200, 200, 200), 1);
 
-            cv::Mat area = cv::Mat::zeros(img.size(), CV_8UC1);
-            cv::circle(area, c, (int)axes.radius, cv::Scalar(255), -1);
-            if (findBall(frame, area, ball, mask)) {
-                cv::Vec2d d(ball[0] - axes.centre.x, ball[1] - axes.centre.y);
-                cv::Vec2d cm = axes.toCm * d;
-                out.x_cm = (float)cm[0];
-                out.y_cm = (float)cm[1];
-                found = true;
-                cv::circle(img, cv::Point((int)ball[0], (int)ball[1]), (int)ball[2], cv::Scalar(0, 255, 0), 2);
-                std::snprintf(buf, sizeof(buf), "x = %+.1f cm   y = %+.1f cm", cm[0], cm[1]);
-                text(img, buf, cv::Scalar(0, 255, 0));
-            } else {
-                text(img, "ball not found");
-            }
+        cv::Mat area = cv::Mat::zeros(img.size(), CV_8UC1);
+        cv::circle(area, c, (int)axes.radius, cv::Scalar(255), -1);
+        if (findBall(frame, area, ball, mask)) {
+            cv::Vec2d d(ball[0] - axes.centre.x, ball[1] - axes.centre.y);
+            cv::Vec2d cm = axes.toCm * d;
+            out.x_cm = (float)cm[0];
+            out.y_cm = (float)cm[1];
+            found = true;
+            cv::circle(img, cv::Point((int)ball[0], (int)ball[1]), (int)ball[2], cv::Scalar(0, 255, 0), 2);
+            std::snprintf(buf, sizeof(buf), "x = %+.1f cm   y = %+.1f cm", cm[0], cm[1]);
+            text(img, buf, cv::Scalar(0, 255, 0));
+        } else {
+            text(img, "ball not found");
         }
     }
 
@@ -215,7 +199,12 @@ void BallTracker::handleKey(int key) {
         samples.clear();
         haveColour = false;
     }
-    if (key == 'n' && haveColour) step = Step::Axes;
+    if (key == 'n' && haveColour) {
+        step = Step::Axes;
+        double cx = size_.width / 2.0, cy = size_.height / 2.0;
+        double r = size_.height * 0.47;                  // platform radius in pixels
+        clicks = {{cx, cy - r}, {cx, cy + r}};           // top, bottom
+    }
     if (key == 'r') {
         step = Step::Colour;
         haveColour = haveAxes = false;

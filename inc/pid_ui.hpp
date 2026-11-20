@@ -5,6 +5,8 @@
 #include <vector>
 #include <opencv2/core.hpp>
 
+using Clock = std::chrono::steady_clock;
+
 struct PidSettings {
     float kp, ki, kd;
     float tau;
@@ -13,7 +15,6 @@ struct PidSettings {
 
 class PidUi {
 public:
-    using Clock = std::chrono::steady_clock;
 
     PidUi(const PidSettings& initial, float setpointLimitCm);
     PidUi(const PidUi&) = delete;
@@ -44,7 +45,6 @@ private:
         double t;
         float x, y, spX, spY;
         float tiltX, tiltY;
-        bool controlling;
     };
 
     static void mouseThunk(int event, int x, int y, int flags, void* self);

@@ -281,7 +281,7 @@ cv::Mat PidUi::renderPanel() const {
     if (!log_.empty() && nowSec() - log_.back().t < 0.3) {
         const Sample& s = log_.back();
         live = fmt("Ball: x=%+.1f cm, ", s.x) + fmt("y=%+.1f cm", s.y);
-        if (s.controlling) live += fmt("   Tilt: x=%+.2f, ", s.tiltX) + fmt("y=%+.2f deg", s.tiltY);
+        live += fmt("   Tilt: x=%+.2f, ", s.tiltX) + fmt("y=%+.2f deg", s.tiltY);
     }
     putCentred(img, live, {0, 542, W, 18}, 0.42, DIM);
     return img;
