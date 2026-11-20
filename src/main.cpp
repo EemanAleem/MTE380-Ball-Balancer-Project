@@ -9,17 +9,16 @@
 #include "pid_ui.hpp"
 #include "servo_link.hpp"
 
+// System dependent serial port name and camera index
+static const int CAMERA_INDEX = 1; // If your laptop has a webcam, that is usually 0. So your external camera is likely 1.
+static const char* SERIAL_PORT = "COM8"; // Choose COM port for Arduino.
+
+static const bool ECHO_ARDUINO = true; // If you want msgs from Arduino to be printed to console = true.
 
 // Constants
-static const int CAMERA_INDEX = 0;
-
-static const char* SERIAL_PORT = "COM3";
 static const int SERIAL_BAUD = 115200;
-static const bool ECHO_ARDUINO = true;
-
 static const std::array<int, NUM_SERVOS> SERVO_CHANNELS = {3, 5, 7};
-
-static const PidSettings INITIAL_PID = {0.4f, 0.1f, 0.25f, 0.03f, 0.0f, 0.0f};
+static const PidSettings INITIAL_PID = {0.04f, 0.1f, 0.25f, 0.03f, 0.0f, 0.0f};
 static const float SETPOINT_LIMIT_CM = 30.0f;
 static const Vec2 SETPOINT_DEFAULT = {0.0, 0.0}; // x and y setpoints in cm
 
