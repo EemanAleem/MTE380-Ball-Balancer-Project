@@ -190,7 +190,6 @@ bool BallTracker::update(BallReading& out) {
     }
 
     cv::imshow("Ball", img);
-    cv::imshow("Mask", mask);
     return found;
 }
 
