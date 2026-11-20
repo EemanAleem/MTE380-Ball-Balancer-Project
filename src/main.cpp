@@ -85,6 +85,8 @@ int main() {
             servos.send(toServoCmd(motorAngles));
             levelSent = false;
 
+            std::printf("[IK]   ball=(%+.1f, %+.1f) cm  tilt=(%+.2f, %+.2f)  ->  ch3=%.1f  ch5=%.1f  ch7=%.1f\n", ball.x_cm, ball.y_cm, tiltX, tiltY, motorAngles[0], motorAngles[1], motorAngles[2]);
+
             // 4. Show on UI
             ui.log(ball.time, ball.x_cm, ball.y_cm, tiltX, tiltY);
         }

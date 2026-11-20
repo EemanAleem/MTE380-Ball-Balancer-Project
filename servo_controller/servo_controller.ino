@@ -43,6 +43,13 @@ uint16_t angleToPulse(float angle, uint8_t channel) {
 void setServoAngle(uint8_t channel, float angle) {
   uint16_t pulse = angleToPulse(angle, channel);
   pwm.setPWM(channel, 0, pulse);
+  Serial.print("[ARDUINO] Channel ");
+  Serial.print(channel);
+  Serial.print(" -> ");
+  Serial.print(angle);
+  Serial.print(" deg (pulse ");
+  Serial.print(pulse);
+  Serial.println(")");
 }
 
 void setup() {
