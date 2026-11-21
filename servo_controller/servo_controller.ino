@@ -29,7 +29,7 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 #define SAFETY_LIMIT_MAX 50
 
 // Per-channel trim in degrees (positive = shifts motor toward higher pulse).
-float angleOffset[16] = {0, 0, 0, 18.5, 0, 19.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};   // all zero by default
+float angleOffset[16] = {0, 0, 0, 18, 0, 21, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};   // all zero by default
 
 // Convert a degree angle to a PCA9685 pulse count
 uint16_t angleToPulse(float angle, uint8_t channel) {
