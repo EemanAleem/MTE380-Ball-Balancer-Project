@@ -13,14 +13,14 @@ using Clock = std::chrono::steady_clock;
 
 // System dependent serial port name and camera index
 static const int CAMERA_INDEX = 1;
-static const char* SERIAL_PORT = "COM3";
+static const char* SERIAL_PORT = "COM8";
 
 static const bool ECHO_ARDUINO = true; // If you want msgs from Arduino to be printed to console = true.
 
 // Constants
 static const int SERIAL_BAUD = 115200;
 static const std::array<int, NUM_SERVOS> SERVO_CHANNELS = {3, 5, 7};
-static const PidSettings INITIAL_PID = {0.2f, 0.0f, 0.0f, 0.03f, 0.0f, 0.0f};
+static const PidSettings INITIAL_PID = {0.6325f, 0.09f, 0.53f, 0.03f, 0.0f, 0.0f};
 
 // Convert IK output (Vec3) to the format ServoLink::send expects
 static std::array<float, NUM_SERVOS> toServoCmd(const Vec3& a) {
@@ -85,7 +85,7 @@ int main() {
             servos.send(toServoCmd(motorAngles));
             levelSent = false;
 
-            std::printf("[IK]   ball=(%+.1f, %+.1f) cm  tilt=(%+.2f, %+.2f)  ->  ch3=%.1f  ch5=%.1f  ch7=%.1f\n", ball.x_cm, ball.y_cm, tiltX, tiltY, motorAngles[0], motorAngles[1], motorAngles[2]);
+            // std::printf("[IK]   ball=(%+.1f, %+.1f) cm  tilt=(%+.2f, %+.2f)  ->  ch3=%.1f  ch5=%.1f  ch7=%.1f\n", ball.x_cm, ball.y_cm, tiltX, tiltY, motorAngles[0], motorAngles[1], motorAngles[2]);
 
             // 4. Show on UI
             ui.log(ball.time, ball.x_cm, ball.y_cm, tiltX, tiltY);
@@ -104,7 +104,10 @@ int main() {
         if (key >= 0) {
             key &= 0xFF;
             if (!ui.handleKey(key)) {
-                if (key == 'q') break;
+                if (key == 'q') {
+                    holdLevel();
+                    break;
+                }
                 tracker.handleKey(key);
             }
         }

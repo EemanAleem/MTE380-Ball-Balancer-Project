@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <string>
 #include <functional>
 #include <vector>
 #include <opencv2/core.hpp>
@@ -48,4 +49,14 @@ private:
     bool plotRequested_ = false;
     std::vector<Sample> log_;
     Clock::time_point start_;
+
+    // Trajectory planning
+    bool trajActive_ = false;
+    int trajIdx_ = 0;
+    Clock::time_point trajNext_;
+    
+    void startTrajectory();
+    void stopTrajectory();
+    void goToWaypoint(int idx);
+    void updateTrajectory();
 };

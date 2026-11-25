@@ -13,13 +13,18 @@ namespace {
 
 const char* WIN = "PID Tuning";
 const char* PLOT_WIN = "PID Results";
-const char* PLOT_FILE = "pid_results.png";
+const char* PLOT_FILE = "plot_results/pid_results.png";
 
-const int W = 520, H = 420;
+const int W = 520, H = 450;
 const int ROW_Y0 = 60, ROW_H = 50;
 const int LABEL_X = 20, SLIDER_X0 = 170, SLIDER_X1 = 370;
 const int BOX_X0 = 390, BOX_X1 = 500, BOX_H = 26;
-const cv::Rect BTN_APPLY(60, 320, 180, 34), BTN_PLOT(280, 320, 180, 34);
+const cv::Rect BTN_APPLY(20, 320, 150, 34), BTN_PLOT(185, 320, 150, 34), BTN_TRI(350, 320, 150, 34);
+
+// Triangle trajectory: waypoints (x, y in cm) and the time spent before moving to the next one
+const float WAYPOINTS[3][2] = {{0.0f, -10.0f}, {7.0f, .0f}, {0.0f, 10.0f}};
+const int NUM_WAYPOINTS = 3;
+const double WAYPOINT_DELAY_S = 11.0;
 
 const cv::Scalar BG(240, 240, 240), TEXT(0, 0, 0), DIM(110, 110, 110);
 const cv::Scalar TRACK(205, 205, 205), EDGE(160, 160, 160), THUMB(225, 225, 225);
@@ -82,6 +87,36 @@ void PidUi::apply() {
     std::printf("[APPLY] Setpoint = (%.2f, %.2f) cm\n", active_.setX, active_.setY);
 }
 
+void PidUi::goToWaypoint(int idx) {
+    trajIdx_ = idx;
+    active_.setX = pending_.setX = WAYPOINTS[idx][0];
+    active_.setY = pending_.setY = WAYPOINTS[idx][1];
+    std::printf("[TRAJ] Waypoint %d/%d -> (%.2f, %.2f) cm\n", idx + 1, NUM_WAYPOINTS, active_.setX, active_.setY);
+}
+
+void PidUi::startTrajectory() {
+    commitEdit();
+    trajActive_ = true;
+    goToWaypoint(0);
+    trajNext_ = Clock::now() + std::chrono::duration_cast<Clock::duration>(std::chrono::duration<double>(WAYPOINT_DELAY_S));
+}
+
+void PidUi::stopTrajectory() {
+    trajActive_ = false;
+    std::printf("[TRAJ] Stopped\n");
+}
+
+void PidUi::updateTrajectory() {
+    if (!trajActive_ || Clock::now() < trajNext_) return;
+    if (trajIdx_ + 1 >= NUM_WAYPOINTS) {
+        trajActive_ = false;   // last waypoint reached, hold it
+        std::printf("[TRAJ] Finished\n");
+        return;
+    }
+    goToWaypoint(trajIdx_ + 1);
+    trajNext_ = Clock::now() + std::chrono::duration_cast<Clock::duration>(std::chrono::duration<double>(WAYPOINT_DELAY_S));
+}
+
 void PidUi::mouseThunk(int event, int x, int y, int flags, void* self) {
     static_cast<PidUi*>(self)->onMouse(event, x, y, flags);
 }
@@ -107,6 +142,7 @@ void PidUi::onMouse(int event, int x, int y, int flags) {
             }
         if (BTN_APPLY.contains(p)) apply();
         else if (BTN_PLOT.contains(p)) plotRequested_ = true;
+        else if (BTN_TRI.contains(p)) { trajActive_ ? stopTrajectory() : startTrajectory(); }
     } else if (event == cv::EVENT_MOUSEMOVE) {
         if (dragging_ >= 0 && (flags & cv::EVENT_FLAG_LBUTTON)) setFromSlider(dragging_, x);
     } else if (event == cv::EVENT_LBUTTONUP) {
@@ -146,6 +182,7 @@ bool PidUi::handleKey(int key) {
 }
 
 void PidUi::draw() {
+    updateTrajectory();
     cv::namedWindow(WIN, cv::WINDOW_AUTOSIZE);
     cv::setMouseCallback(WIN, &PidUi::mouseThunk, this);
     cv::imshow(WIN, renderPanel());
@@ -188,11 +225,17 @@ cv::Mat PidUi::renderPanel() const {
 
     button(img, BTN_APPLY, "Apply");
     button(img, BTN_PLOT, "Plot");
+    button(img, BTN_TRI, trajActive_ ? "Stop Triangle" : "Triangle");
 
     putCentred(img, fmt("Active: Kp=%.4f  ", active_.kp) + fmt("Ki=%.4f  ", active_.ki) + fmt("Kd=%.4f", active_.kd),
                {0, 366, W, 20}, 0.45, TEXT);
     putCentred(img, fmt("Setpoint = (%.2f, ", active_.setX) + fmt("%.2f) cm", active_.setY),
                {0, 388, W, 20}, 0.45, TEXT);
+    if (trajActive_) {
+        double left = std::chrono::duration<double>(trajNext_ - Clock::now()).count();
+        putCentred(img, fmt("Triangle: waypoint %d/3", trajIdx_ + 1) + fmt("  (next in %.1f s)", std::max(left, 0.0)),
+                   {0, 412, W, 20}, 0.45, TEXT);
+    }
     return img;
 }
 
