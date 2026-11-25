@@ -1,8 +1,8 @@
 #pragma once
 
 #include <chrono>
-#include <string>
 #include <functional>
+#include <string>
 #include <vector>
 #include <opencv2/core.hpp>
 
@@ -25,6 +25,10 @@ public:
     float setpointX() const { return active_.setX; }
     float setpointY() const { return active_.setY; }
 
+    bool trajectoryActive() const { return trajActive_; }
+    int trajectoryIndex() const { return trajIdx_; }
+    std::vector<cv::Point2f> trajectoryWaypoints() const;
+
     void log(Clock::time_point t, float x, float y, float tiltX, float tiltY);
     void draw();
     bool handleKey(int key);
@@ -39,6 +43,10 @@ private:
     void setFromSlider(int row, int x);
     void commitEdit();
     void apply();
+    void goToWaypoint(int idx);
+    void startTrajectory();
+    void stopTrajectory();
+    void updateTrajectory();
     cv::Mat renderPanel() const;
     cv::Mat renderPlot() const;
 
@@ -47,16 +55,9 @@ private:
     int dragging_ = -1, editRow_ = -1;
     std::string editText_;
     bool plotRequested_ = false;
-    std::vector<Sample> log_;
-    Clock::time_point start_;
-
-    // Trajectory planning
     bool trajActive_ = false;
     int trajIdx_ = 0;
     Clock::time_point trajNext_;
-    
-    void startTrajectory();
-    void stopTrajectory();
-    void goToWaypoint(int idx);
-    void updateTrajectory();
+    std::vector<Sample> log_;
+    Clock::time_point start_;
 };

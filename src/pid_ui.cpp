@@ -106,6 +106,12 @@ void PidUi::stopTrajectory() {
     std::printf("[TRAJ] Stopped\n");
 }
 
+std::vector<cv::Point2f> PidUi::trajectoryWaypoints() const {
+    std::vector<cv::Point2f> pts;
+    for (int i = 0; i < NUM_WAYPOINTS; i++) pts.emplace_back(WAYPOINTS[i][0], WAYPOINTS[i][1]);
+    return pts;
+}
+
 void PidUi::updateTrajectory() {
     if (!trajActive_ || Clock::now() < trajNext_) return;
     if (trajIdx_ + 1 >= NUM_WAYPOINTS) {

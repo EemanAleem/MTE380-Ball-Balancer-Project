@@ -173,6 +173,21 @@ bool BallTracker::update(BallReading& out) {
         cv::line(img, toPt(clicks[1]), toPt(clicks[0]), cv::Scalar(0, 200, 0), 1);
         cv::circle(img, c, (int)axes.radius, cv::Scalar(200, 200, 200), 1);
 
+        // Triangle trajectory overlay (only while it is running)
+        if (!traj_.empty()) {
+            cv::Matx22d toPx = axes.toCm.inv();                     // cm -> pixel offset
+            std::vector<cv::Point> pts;
+            for (const auto& w : traj_) {
+                cv::Vec2d d = toPx * cv::Vec2d(w.x, w.y);
+                pts.push_back(toPt(axes.centre + cv::Point2d(d[0], d[1])));
+            }
+            cv::polylines(img, pts, true, cv::Scalar(255, 200, 0), 2, cv::LINE_AA);
+            for (int i = 0; i < (int)pts.size(); i++) {
+                bool cur = (i == trajIdx_);
+                cv::circle(img, pts[i], cur ? 8 : 5, cur ? cv::Scalar(0, 0, 255) : cv::Scalar(255, 200, 0), -1, cv::LINE_AA);
+            }
+        }
+
         cv::Mat area = cv::Mat::zeros(img.size(), CV_8UC1);
         cv::circle(area, c, (int)axes.radius, cv::Scalar(255), -1);
         if (findBall(frame, area, ball, mask)) {
@@ -210,6 +225,11 @@ void BallTracker::handleKey(int key) {
         samples.clear();
         clicks.clear();
     }
+}
+
+void BallTracker::setTrajectory(const std::vector<cv::Point2f>& waypointsCm, int current) {
+    traj_ = waypointsCm;
+    trajIdx_ = current;
 }
 
 bool BallTracker::calibrated() const { return haveAxes; }

@@ -70,7 +70,11 @@ int main() {
         // 0. Update past frame time
         pastBallTime = ball.time;
 
-        // 1. Declare Ball Position struct
+        // 1. Show the triangle on the camera window while the trajectory is running
+        if (ui.trajectoryActive()) tracker.setTrajectory(ui.trajectoryWaypoints(), ui.trajectoryIndex());
+        else tracker.setTrajectory({}, -1);
+
+        // 2. Declare Ball Position struct
         visible = tracker.update(ball);
         double dt = std::chrono::duration<double>(ball.time - pastBallTime).count(); // seconds
 
